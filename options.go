@@ -13,27 +13,33 @@ var (
 )
 
 type importOptions struct {
-	cidVersion   int
-	mhType       uint64
-	rawLeaves    bool
-	rawLeavesSet bool
-	inline       bool
-	inlineLimit  int
-	chunker      string
-	layout       options.Layout
-	out          chan *ImportEvent
+	cidVersion         int
+	mhType             uint64
+	rawLeaves          bool
+	rawLeavesSet       bool
+	inline             bool
+	inlineLimit        int
+	chunker            string
+	layout             options.Layout
+	out                chan *ImportEvent
+	includeHiddenFiles bool
+	ignoreFile         string
+	ignoreRules        []string
 }
 
 func buildImportOptions(opts ...ImportOption) (*importOptions, error) {
 	ioptions := &importOptions{
-		cidVersion:   1,
-		mhType:       mh.SHA2_256,
-		rawLeaves:    false,
-		rawLeavesSet: false,
-		inline:       false,
-		inlineLimit:  32,
-		chunker:      "size-262144",
-		layout:       options.BalancedLayout,
+		cidVersion:         1,
+		mhType:             mh.SHA2_256,
+		rawLeaves:          false,
+		rawLeavesSet:       false,
+		inline:             false,
+		inlineLimit:        32,
+		chunker:            "size-262144",
+		layout:             options.BalancedLayout,
+		includeHiddenFiles: false,
+		ignoreFile:         "",
+		ignoreRules:        nil,
 	}
 
 	for _, opt := range opts {
@@ -142,6 +148,32 @@ func (importScope) TrickleLayout() ImportOption {
 func (importScope) Events(ch chan *ImportEvent) ImportOption {
 	return func(opts *importOptions) error {
 		opts.out = ch
+		return nil
+	}
+}
+
+// IncludeHiddenFiles includes hidden files when scan filesystems.
+func (importScope) IncludeHiddenFiles() ImportOption {
+	return func(opts *importOptions) error {
+		opts.includeHiddenFiles = true
+		return nil
+	}
+}
+
+// IgnoreFile specifies the gitignore style file to exclude files from
+// filesystem scan.
+func (importScope) IgnoreFile(path string) ImportOption {
+	return func(opts *importOptions) error {
+		opts.ignoreFile = path
+		return nil
+	}
+}
+
+// Ignores sets a set of gitignore style rules to exclude files from
+// filesystem scan.
+func (importScope) Ignores(rules ...string) ImportOption {
+	return func(opts *importOptions) error {
+		opts.ignoreRules = rules
 		return nil
 	}
 }

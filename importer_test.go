@@ -62,6 +62,20 @@ func TestImport(t *testing.T) {
 		cid.String(),
 	)
 
+	// CID v1, inline, exclude bob.txt
+	cid, err = pi.Import(
+		ctx,
+		"./data",
+		ImportOpts.CIDv1(),
+		ImportOpts.InlineBlock(),
+		ImportOpts.Ignores("bob.txt"),
+	)
+	require.NoError(t, err)
+	require.Equal(t,
+		"bafybeigszi3podzseg3m64vvosm4sgyfrk7reukhifpuf627iwjkebochu",
+		cid.String(),
+	)
+
 	// CID v0, with events
 	ch := make(chan *ImportEvent, 8)
 	cid, err = pi.Import(
