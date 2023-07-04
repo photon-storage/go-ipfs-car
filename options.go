@@ -59,6 +59,7 @@ type importScope struct{}
 
 var ImportOpts importScope
 
+// CIDv0 uses CID v0.
 func (importScope) CIDv0() ImportOption {
 	return func(opts *importOptions) error {
 		opts.cidVersion = 0
@@ -66,6 +67,7 @@ func (importScope) CIDv0() ImportOption {
 	}
 }
 
+// CIDv1 uses CID v1 (default).
 func (importScope) CIDv1() ImportOption {
 	return func(opts *importOptions) error {
 		opts.cidVersion = 1
@@ -73,6 +75,7 @@ func (importScope) CIDv1() ImportOption {
 	}
 }
 
+// MhType sets multihash type to use (default: mh.SHA2_256).
 func (importScope) MhType(code uint64) ImportOption {
 	return func(opts *importOptions) error {
 		_, found := mh.Codes[code]
@@ -85,6 +88,8 @@ func (importScope) MhType(code uint64) ImportOption {
 	}
 }
 
+// RawLeaves enables raw leaves in the DAG tree (default to false for CIDv0,
+// true for CIDv1).
 func (importScope) RawLeaves(enabled bool) ImportOption {
 	return func(opts *importOptions) error {
 		opts.rawLeaves = enabled
@@ -93,6 +98,7 @@ func (importScope) RawLeaves(enabled bool) ImportOption {
 	}
 }
 
+// InlineBlock enables inline small blocks into CID (default false).
 func (importScope) InlineBlock() ImportOption {
 	return func(opts *importOptions) error {
 		opts.inline = true
@@ -100,6 +106,7 @@ func (importScope) InlineBlock() ImportOption {
 	}
 }
 
+// InlineBlockLimit sets the threshold for triggering inline (default 32).
 func (importScope) InlineBlockLimit(limit int) ImportOption {
 	return func(opts *importOptions) error {
 		opts.inlineLimit = limit
@@ -107,6 +114,7 @@ func (importScope) InlineBlockLimit(limit int) ImportOption {
 	}
 }
 
+// Chunker sets chunker configuration (default size-262144).
 func (importScope) Chunker(chunker string) ImportOption {
 	return func(opts *importOptions) error {
 		opts.chunker = chunker
@@ -114,6 +122,7 @@ func (importScope) Chunker(chunker string) ImportOption {
 	}
 }
 
+// BalancedLayout uses balanced DAG layout.
 func (importScope) BalancedLayout() ImportOption {
 	return func(opts *importOptions) error {
 		opts.layout = options.BalancedLayout
@@ -121,13 +130,15 @@ func (importScope) BalancedLayout() ImportOption {
 	}
 }
 
-func (importScope) TrickleLayoutLayout() ImportOption {
+// TrickleLayout uses trickle DAG layout.
+func (importScope) TrickleLayout() ImportOption {
 	return func(opts *importOptions) error {
 		opts.layout = options.TrickleLayout
 		return nil
 	}
 }
 
+// Events sets event channel to receive import progress.
 func (importScope) Events(ch chan *ImportEvent) ImportOption {
 	return func(opts *importOptions) error {
 		opts.out = ch

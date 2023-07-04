@@ -20,10 +20,13 @@ import (
 	"github.com/ipfs/kubo/core/coreunix"
 )
 
+// DataImporter creates a new importer that imports data (can be byte slice,
+// io.Reader or path from local file system) into in-memory dag service.
 type DataImporter struct {
 	dagServ ipld.DAGService
 }
 
+// NewDataImporter creates a new DataImporter.
 func NewDataImporter() *DataImporter {
 	return &DataImporter{
 		dagServ: merkledag.NewDAGService(blockservice.New(
@@ -33,6 +36,7 @@ func NewDataImporter() *DataImporter {
 	}
 }
 
+// Import imports the given input.
 func (di *DataImporter) Import(
 	ctx context.Context,
 	input any,
