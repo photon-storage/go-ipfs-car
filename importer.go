@@ -23,16 +23,18 @@ import (
 // DataImporter creates a new importer that imports data (can be byte slice,
 // io.Reader or path from local file system) into in-memory dag service.
 type DataImporter struct {
+	bstore  blockstore.Blockstore
 	dagServ ipld.DAGService
 }
 
 // NewDataImporter creates a new DataImporter.
 func NewDataImporter() *DataImporter {
+	bstore := blockstore.NewBlockstore(dssync.MutexWrap(ds.NewMapDatastore()))
 	return &DataImporter{
-		dagServ: merkledag.NewDAGService(blockservice.New(
-			blockstore.NewBlockstore(dssync.MutexWrap(ds.NewMapDatastore())),
-			newNoopExchg(),
-		)),
+		bstore: bstore,
+		dagServ: merkledag.NewDAGService(
+			blockservice.New(bstore, newNoopExchg()),
+		),
 	}
 }
 
@@ -63,7 +65,8 @@ func (di *DataImporter) Import(
 		var err error
 		if target, err = newFsPath(
 			v,
-			ioptions.ignores,
+			ioptions.ignoreFile,
+			ioptions.ignoreRules,
 			ioptions.includeHiddenFiles,
 		); err != nil {
 			return cid.Undef, err
@@ -135,9 +138,14 @@ func (di *DataImporter) Import(
 	return nd.Cid(), nil
 }
 
+func (di *DataImporter) Blockstore() blockstore.Blockstore {
+	return di.bstore
+}
+
 func newFsPath(
 	path string,
-	ignores []string,
+	ignoreFile string,
+	ignoreRules []string,
 	includeHiddenFiles bool,
 ) (files.Node, error) {
 	stat, err := os.Lstat(path)
@@ -145,7 +153,7 @@ func newFsPath(
 		return nil, err
 	}
 
-	filter, err := files.NewFilter("", ignores, includeHiddenFiles)
+	filter, err := files.NewFilter(ignoreFile, ignoreRules, includeHiddenFiles)
 	if err != nil {
 		return nil, err
 	}

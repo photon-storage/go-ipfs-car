@@ -23,7 +23,8 @@ type importOptions struct {
 	layout             options.Layout
 	out                chan *ImportEvent
 	includeHiddenFiles bool
-	ignores            []string
+	ignoreFile         string
+	ignoreRules        []string
 }
 
 func buildImportOptions(opts ...ImportOption) (*importOptions, error) {
@@ -37,7 +38,8 @@ func buildImportOptions(opts ...ImportOption) (*importOptions, error) {
 		chunker:            "size-262144",
 		layout:             options.BalancedLayout,
 		includeHiddenFiles: false,
-		ignores:            nil,
+		ignoreFile:         "",
+		ignoreRules:        nil,
 	}
 
 	for _, opt := range opts {
@@ -158,11 +160,20 @@ func (importScope) IncludeHiddenFiles() ImportOption {
 	}
 }
 
+// IgnoreFile specifies the gitignore style file to exclude files from
+// filesystem scan.
+func (importScope) IgnoreFile(path string) ImportOption {
+	return func(opts *importOptions) error {
+		opts.ignoreFile = path
+		return nil
+	}
+}
+
 // Ignores sets a set of gitignore style rules to exclude files from
 // filesystem scan.
 func (importScope) Ignores(rules ...string) ImportOption {
 	return func(opts *importOptions) error {
-		opts.ignores = rules
+		opts.ignoreRules = rules
 		return nil
 	}
 }
