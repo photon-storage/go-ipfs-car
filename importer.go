@@ -61,7 +61,11 @@ func (di *DataImporter) Import(
 	switch v := input.(type) {
 	case string:
 		var err error
-		if target, err = newFsPath(v); err != nil {
+		if target, err = newFsPath(
+			v,
+			ioptions.ignores,
+			ioptions.includeHiddenFiles,
+		); err != nil {
 			return cid.Undef, err
 		}
 		path = v
@@ -131,13 +135,17 @@ func (di *DataImporter) Import(
 	return nd.Cid(), nil
 }
 
-func newFsPath(path string) (files.Node, error) {
+func newFsPath(
+	path string,
+	ignores []string,
+	includeHiddenFiles bool,
+) (files.Node, error) {
 	stat, err := os.Lstat(path)
 	if err != nil {
 		return nil, err
 	}
 
-	filter, err := files.NewFilter("", nil, false)
+	filter, err := files.NewFilter("", ignores, includeHiddenFiles)
 	if err != nil {
 		return nil, err
 	}
