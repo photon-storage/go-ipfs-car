@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
+	"github.com/ipfs/boxo/exchange"
 	blocks "github.com/ipfs/go-block-format"
 	"github.com/ipfs/go-cid"
-	exchange "github.com/ipfs/go-ipfs-exchange-interface"
 )
 
 var (
