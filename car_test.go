@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"io/ioutil"
 	"sort"
 	"testing"
 
@@ -18,9 +19,23 @@ func TestBuilder(t *testing.T) {
 	ctx := context.Background()
 	b := NewBuilder()
 
+	v1car, err := b.Buildv1(
+		ctx,
+		"./data",
+		ImportOpts.CIDv1(),
+	)
+	require.NoError(t, err)
+
+	v1buf := bytes.Buffer{}
+	require.NoError(t, v1car.Write(&v1buf))
+	require.Equal(t,
+		"bafybeid4ij3cn74tlwbnnwscmsjxz2h5n6j7xtafbp77xkekik6e42xjk4",
+		v1car.Root().String(),
+	)
+
 	// CID v1
 	ch := make(chan *ImportEvent, 8)
-	wt, err := b.Build(
+	v2car, err := b.Buildv2(
 		ctx,
 		"./data",
 		ImportOpts.CIDv1(),
@@ -32,12 +47,16 @@ func TestBuilder(t *testing.T) {
 		builderCids = append(builderCids, v.CID)
 	}
 
-	buf := bytes.Buffer{}
-	n, err := wt.WriteTo(&buf)
+	v2buf := bytes.Buffer{}
+	n, err := v2car.WriteTo(&v2buf)
 	require.NoError(t, err)
-	require.Equal(t, int64(len(buf.Bytes())), n)
+	require.Equal(t, int64(len(v2buf.Bytes())), n)
+	require.Equal(t,
+		"bafybeid4ij3cn74tlwbnnwscmsjxz2h5n6j7xtafbp77xkekik6e42xjk4",
+		v2car.Root().String(),
+	)
 
-	v2r, err := ipldcar.NewReader(bytes.NewReader(buf.Bytes()))
+	v2r, err := ipldcar.NewReader(bytes.NewReader(v2buf.Bytes()))
 	require.NoError(t, err)
 	cids, err := v2r.Roots()
 	require.NoError(t, err)
@@ -47,9 +66,13 @@ func TestBuilder(t *testing.T) {
 		cids[0].String(),
 	)
 
-	sr, err := v2r.DataReader()
+	dr, err := v2r.DataReader()
 	require.NoError(t, err)
-	v1r, err := ipldcarv1.NewCarReader(sr)
+	v1data, err := ioutil.ReadAll(dr)
+	require.NoError(t, err)
+	require.DeepEqual(t, v1buf.Bytes(), v1data)
+
+	v1r, err := ipldcarv1.NewCarReader(&v1buf)
 	require.NoError(t, err)
 
 	// Compare block CIDs from v1 reader match CIDs reported by builder.
