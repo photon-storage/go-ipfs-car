@@ -8,8 +8,6 @@ import (
 
 	"github.com/ipfs/boxo/blockservice"
 	blockstore "github.com/ipfs/boxo/blockstore"
-	coreiface "github.com/ipfs/boxo/coreiface"
-	"github.com/ipfs/boxo/coreiface/options"
 	"github.com/ipfs/boxo/files"
 	"github.com/ipfs/boxo/ipld/merkledag"
 	"github.com/ipfs/go-cid"
@@ -17,6 +15,8 @@ import (
 	ds "github.com/ipfs/go-datastore"
 	dssync "github.com/ipfs/go-datastore/sync"
 	ipld "github.com/ipfs/go-ipld-format"
+	coreiface "github.com/ipfs/kubo/core/coreiface"
+	"github.com/ipfs/kubo/core/coreiface/options"
 	"github.com/ipfs/kubo/core/coreunix"
 )
 
@@ -110,7 +110,7 @@ func (di *DataImporter) Import(
 				if !ok {
 					continue
 				}
-				if ev.Path == nil {
+				if ev.Path.String() == "" {
 					continue
 				}
 
@@ -122,7 +122,7 @@ func (di *DataImporter) Import(
 				}
 				ioptions.out <- &ImportEvent{
 					Name:  name,
-					CID:   ev.Path.Cid(),
+					CID:   ev.Path.RootCid(),
 					Bytes: ev.Bytes,
 					Size:  ev.Size,
 				}
