@@ -3,7 +3,7 @@ package car
 import (
 	"errors"
 
-	"github.com/ipfs/boxo/coreiface/options"
+	"github.com/ipfs/kubo/core/coreiface/options"
 	mh "github.com/multiformats/go-multihash"
 )
 
