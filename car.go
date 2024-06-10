@@ -20,10 +20,28 @@ type Builder struct {
 }
 
 // NewBuilder creates a new car builder.
+// Files processed by this builder are only stored in memory.
 func NewBuilder() *Builder {
 	return &Builder{
 		di: NewDataImporter(),
 	}
+}
+
+// NewBuilder creates a new car builder, but files are backed by storage on the disk
+// instead of in memory.
+//
+// path doesn't have to exist, but must be a directory if it does exist.
+//
+// It's up to the caller to remove the files stored under path once they are no longer
+// using the Builder or the car structs it can build.
+func NewBuilderDisk(path string) (*Builder, error) {
+	di, err := NewDataImporterDisk(path)
+	if err != nil {
+		return nil, err
+	}
+	return &Builder{
+		di: di,
+	}, nil
 }
 
 type CarV1 struct {

@@ -2,6 +2,7 @@ package car
 
 import (
 	"context"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -18,6 +19,8 @@ import (
 	coreiface "github.com/ipfs/kubo/core/coreiface"
 	"github.com/ipfs/kubo/core/coreiface/options"
 	"github.com/ipfs/kubo/core/coreunix"
+
+	exampleds "github.com/ipfs/go-datastore/examples"
 )
 
 // DataImporter creates a new importer that imports data (can be byte slice,
@@ -36,6 +39,30 @@ func NewDataImporter() *DataImporter {
 			blockservice.New(bstore, newNoopExchg()),
 		),
 	}
+}
+
+func NewDataImporterDisk(path string) (*DataImporter, error) {
+	_, err := os.Stat(path)
+	if errors.Is(err, os.ErrNotExist) {
+		err = os.Mkdir(path, 0755)
+		if err != nil {
+			return nil, err
+		}
+	} else if err != nil {
+		return nil, err
+	}
+
+	dstore, err := exampleds.NewDatastore(path)
+	if err != nil {
+		return nil, err
+	}
+	bstore := blockstore.NewBlockstore(dssync.MutexWrap(dstore))
+	return &DataImporter{
+		bstore: bstore,
+		dagServ: merkledag.NewDAGService(
+			blockservice.New(bstore, newNoopExchg()),
+		),
+	}, nil
 }
 
 // Import imports the given input.
